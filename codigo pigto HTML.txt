@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Pictogramas</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        #pictogram-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 8px;
+            overflow: hidden;
+            width: 100%;
+            height: 500px;
+        }
+
+        #controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .control-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .options-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .options-container button {
+            background: none;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 5px;
+            transition: all 0.2s ease-in-out;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .options-container button:hover {
+            border-color: #007bff;
+        }
+
+        .options-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        #downloadBtn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            margin-top: 20px;
+            transition: background-color 0.2s ease-in-out;
+        }
+        
+        #downloadBtn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Generador de Pictogramas</h1>
+
+    <div class="container">
+        <div id="pictogram-display"></div>
+
+        <div id="controls">
+            <div class="control-section">
+                <h2>Conducta a Corregir</h2>
+                <select id="conductaSelect">
+                    <option value="none">Seleccionar...</option>
+                    <option value="no_grita">No grita</option>
+                    <option value="no_pega">No se pega</option>
+                    <option value="no_corre">No se corre</option>
+                    <option value="no_muerde">No se muerde</option>
+                </select>
+            </div>
+            
+            <div class="control-section">
+                <h2>Cuerpo</h2>
+                <div id="cuerpoOptions" class="options-container"></div>
+            </div>
+
+            <div class="control-section">
+                <h2>Cabello</h2>
+                <div id="cabelloOptions" class="options-container"></div>
+            </div>
+
+            <div class="control-section">
+                <h2>Rostro</h2>
+                <div id="rostroOptions" class="options-container"></div>
+            </div>
+
+            <div class="control-section">
+                <h2>Ropa</h2>
+                <div id="ropaOptions" class="options-container"></div>
+            </div>
+
+            <div class="control-section">
+                <h2>Accesorios</h2>
+                <div id="accesoriosOptions" class="options-container"></div>
+            </div>
+        </div>
+    </div>
+    
+    <button id="downloadBtn">Descargar PNG</button>
+    
+    <script>
+        // ¡IMPORTANTE! Reemplaza estas URL de ejemplo con las URL públicas de tus imágenes.
+        const imagePaths = {
+            cuerpo: ['https://ejemplo.com/cuerpo1.png', 'https://ejemplo.com/cuerpo2.png'],
+            cabello: ['https://ejemplo.com/cabello1.png', 'https://ejemplo.com/cabello2.png'],
+            rostro: ['https://ejemplo.com/rostro1.png', 'https://ejemplo.com/rostro2.png'],
+            ropa: ['https://ejemplo.com/ropa1.png', 'https://ejemplo.com/ropa2.png'],
+            accesorios: ['https://ejemplo.com/accesorio1.png'],
+            conductas: {
+                no_grita: { url: 'https://ejemplo.com/no_grita.png', text: 'NO GRITA' },
+                no_pega: { url: 'https://ejemplo.com/no_pega.png', text: 'NO SE PEGA' },
+                no_corre: { url: 'https://ejemplo.com/no_corre.png', text: 'NO SE CORRE' },
+                no_muerde: { url: 'https://ejemplo.com/no_muerde.png', text: 'NO SE MUERDE' },
+            },
+            simbolo: 'https://ejemplo.com/prohibicion.png',
+        };
+
+        let images = {};
+        let selected = {
+            cuerpo: null,
+            cabello: null,
+            rostro: null,
+            ropa: null,
+            accesorios: null,
+            conducta: null
+        };
+        let pg; // Canvas fuera de pantalla para la descarga
+
+        function preload() {
+            // Cargamos todas las imágenes
+            for (const category in imagePaths) {
+                if (category === 'conductas') {
+                    images[category] = {};
+                    for (const key in imagePaths.conductas) {
+                        images[category][key] = loadImage(imagePaths.conductas[key].url);
+                    }
+                } else if (category === 'simbolo') {
+                    images[category] = loadImage(imagePaths[category]);
+                } else {
+                    images[category] = imagePaths[category].map(url => loadImage(url));
+                }
+            }
+        }
+
+        function setup() {
+            let canvas = createCanvas(400, 500);
+            canvas.parent('pictogram-display');
+            pg = createGraphics(400, 500);
+
+            selected.cuerpo = images.cuerpo[0];
+            selected.cabello = images.cabello[0];
+            selected.rostro = images.rostro[0];
+            selected.ropa = images.ropa[0];
+            selected.accesorios = images.accesorios[0];
+
+            setupControls();
+            
+            const downloadBtn = document.getElementById('downloadBtn');
+            downloadBtn.addEventListener('click', () => {
+                saveCanvas(pg, 'mi_pictograma', 'png');
+            });
+        }
+
+        function draw() {
+            clear();
+            pg.clear();
+            drawPictogram(this);
+            drawPictogram(pg);
+        }
+
+        function drawPictogram(canvasToDraw) {
+            // Dibujamos las capas del pictograma en el orden correcto
+            if (selected.cuerpo) canvasToDraw.image(selected.cuerpo, 0, 0);
+            if (selected.ropa) canvasToDraw.image(selected.ropa, 0, 0);
+            if (selected.rostro) canvasToDraw.image(selected.rostro, 0, 0);
+            if (selected.cabello) canvasToDraw.image(selected.cabello, 0, 0);
+            if (selected.accesorios) canvasToDraw.image(selected.accesorios, 0, 0);
+            
+            // Si hay una conducta seleccionada, dibujamos la señal de prohibición
+            if (selected.conducta) {
+                const conductaData = imagePaths.conductas[selected.conducta];
+                const conductaImg = images.conductas[selected.conducta];
+
+                // Dibujamos la ilustración de la conducta primero
+                if (conductaImg) {
+                    canvasToDraw.image(conductaImg, 0, 0, 400, 500);
+                }
+
+                // Luego dibujamos el símbolo de prohibición sobre ella
+                if (images.simbolo) {
+                    canvasToDraw.image(images.simbolo, 0, 0, 400, 500);
+                }
+                
+                // Y finalmente, el texto
+                if (conductaData) {
+                    canvasToDraw.fill(0);
+                    canvasToDraw.textSize(24);
+                    canvasToDraw.textAlign(CENTER, CENTER);
+                    canvasToDraw.text(conductaData.text, width / 2, height - 30);
+                }
+            }
+        }
+
+        function setupControls() {
+            const conductaSelect = document.getElementById('conductaSelect');
+            conductaSelect.addEventListener('change', (e) => {
+                selected.conducta = e.target.value === 'none' ? null : e.target.value;
+            });
+
+            const categories = ['cuerpo', 'cabello', 'rostro', 'ropa', 'accesorios'];
+            categories.forEach(category => {
+                const container = document.getElementById(`${category}Options`);
+                imagePaths[category].forEach((url, index) => {
+                    const button = document.createElement('button');
+                    const thumb = document.createElement('img');
+                    thumb.src = url;
+                    button.appendChild(thumb);
+                    button.onclick = () => {
+                        selected[category] = images[category][index];
+                    };
+                    container.appendChild(button);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
