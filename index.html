@@ -88,14 +88,6 @@
             <select id="rostro"></select>
         </div>
         <div>
-            <label for="ropa">Ropa</label>
-            <select id="ropa"></select>
-        </div>
-        <div>
-            <label for="accesorio">Accesorio</label>
-            <select id="accesorio"></select>
-        </div>
-        <div>
             <label for="prohibicion">Conducta a Corregir</label>
             <select id="prohibicion"></select>
         </div>
@@ -105,7 +97,7 @@
 </div>
 
 <script>
-    let cuerpoSelect, cabelloSelect, rostroSelect, ropaSelect, accesorioSelect, prohibicionSelect;
+    let cuerpoSelect, cabelloSelect, rostroSelect, prohibicionSelect;
     let canvas;
     let images = {};
 
@@ -113,8 +105,6 @@
         cuerpo: [],
         cabello: [],
         rostro: [],
-        ropa: [],
-        accesorio: [],
         prohibicion: []
     };
 
@@ -155,21 +145,7 @@
         for (let i = 0; i < images.rostro.length; i++) {
             rostroSelect.option(`Rostro ${i + 1}`, i);
         }
-
-        ropaSelect = createSelect();
-        ropaSelect.parent('ropa');
-        ropaSelect.option('Ninguno', 'none');
-        for (let i = 0; i < images.ropa.length; i++) {
-            ropaSelect.option(`Ropa ${i + 1}`, i);
-        }
-
-        accesorioSelect = createSelect();
-        accesorioSelect.parent('accesorio');
-        accesorioSelect.option('Ninguno', 'none');
-        for (let i = 0; i < images.accesorio.length; i++) {
-            accesorioSelect.option(`Accesorio ${i + 1}`, i);
-        }
-
+        
         prohibicionSelect = createSelect();
         prohibicionSelect.parent('prohibicion');
         prohibicionSelect.option('Ninguno', 'none');
@@ -207,16 +183,6 @@
             image(images.rostro[selectedRostro], width / 2, height / 2);
         }
 
-        let selectedRopa = ropaSelect.value();
-        if (selectedRopa !== 'none' && images.ropa[selectedRopa]) {
-            image(images.ropa[selectedRopa], width / 2, height / 2);
-        }
-
-        let selectedAccesorio = accesorioSelect.value();
-        if (selectedAccesorio !== 'none' && images.accesorio[selectedAccesorio]) {
-            image(images.accesorio[selectedAccesorio], width / 2, height / 2);
-        }
-
         let selectedProhibicion = prohibicionSelect.value();
         if (selectedProhibicion !== 'none' && images.prohibicion[selectedProhibicion]) {
             image(images.prohibicion[selectedProhibicion], width / 2, height / 2);
@@ -226,5 +192,6 @@
 
 </body>
 </html>
+
 
 
